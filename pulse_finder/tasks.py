@@ -19,6 +19,13 @@ myoii = io.imread(
 cell_tracks = io.imread(
     DATA_PATH + '/' + FOLD_NAME + '/' + FOLD_NAME + '_cell_tracks.tif')  
 
+# Get variables
+nT = myoii.shape[0]
+nY = myoii.shape[1]
+nX = myoii.shape[2]
+ 
+stop
+
 #%%
 
 # Get unique cell_id
