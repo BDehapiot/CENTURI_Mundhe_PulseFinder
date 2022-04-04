@@ -190,45 +190,46 @@ for t in range(time.shape[0]):
     
     # Append display
     display[t,0:myoii_crop.shape[0],0:myoii_crop.shape[1]] = myoii_crop + (outline_crop + text_crop)*255
-   
-    # Add to napari viewer
+       
+# Show results in napari viewer
+with napari.gui_qt():
+
+    # Plot data
+    static_canvas = FigureCanvas(Figure(figsize=(5, 5)))
+    
+    ax1 = static_canvas.figure.subplots()    
+    line1, = ax1.plot(time, myoii_intden, color='blue', label='MyoII')
+    ax1.axvline(x=60)
+    ax1.set_xlabel('time_point')
+    ax1.set_ylabel('MyoII Int. Den. (A.U.)')
+    
+    ax2 = ax1.twinx()    
+    line2, = ax2.plot(time, area, color='gray', linestyle='dashed', label='area')
+    ax2.set_xlabel('time_point')
+    ax2.set_ylabel('cell area (pixels)')    
+    
+    ax1.set_title('Cell #' + str(i) + ' MyoII & cell area')
+    ax1.legend(handles=[line1, line2])    
+
+# Add to napari viewer
     
 @magicgui(
-    auto_call=True,
     call_button="select pulse(s)")
 
 def select_pulses( 
-        pulse1_ti: int = None,
-        pulse1_tf: int = None,
-        pulse2_ti: int = None,
-        pulse2_tf: int = None,
-        pulse3_ti: int = None,
-        pulse3_tf: int = None,
-        pulse4_ti: int = None,
-        pulse4_tf: int = None
-    ) -> napari.types.ImageData:
+        
+        pulse1_ti: int = 0, pulse1_tf: int = 0,
+        pulse2_ti: int = 0, pulse2_tf: int = 0,
+        pulse3_ti: int = 0, pulse3_tf: int = 0,
+        pulse4_ti: int = 0, pulse4_tf: int = 0
     
-    # Show results in napari viewer
-    with napari.gui_qt():
+    ) -> napari.types.ArrayBase:
+    
+    pulse_info = pulse1_ti
+    
+    return pulse_info
 
-        # Plot data
-        static_canvas = FigureCanvas(Figure(figsize=(5, 5)))
-        
-        ax1 = static_canvas.figure.subplots()    
-        line1, = ax1.plot(time, myoii_intden, color='blue', label='MyoII')
-        ax1.axvline(x=60)
-        ax1.set_xlabel('time_point')
-        ax1.set_ylabel('MyoII Int. Den. (A.U.)')
-        
-        ax2 = ax1.twinx()    
-        line2, = ax2.plot(time, area, color='gray', linestyle='dashed', label='area')
-        ax2.set_xlabel('time_point')
-        ax2.set_ylabel('cell area (pixels)')    
-        
-        ax1.set_title('Cell #' + str(i) + ' MyoII & cell area')
-        ax1.legend(handles=[line1, line2])
-    
-    return static_canvas
+# print(pulse_info)
     
 viewer = napari.Viewer()
 viewer.add_image(display, name='Cell #' + str(i) + ' MyoII', contrast_limits = [0, np.quantile(myoii, 0.999)])
