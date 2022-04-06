@@ -179,28 +179,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 import numpy as np
 from magicgui import magicgui
-
-#     # Plot data
-#     static_canvas = FigureCanvas(Figure(figsize=(5, 5)))
-    
-#     p1 = static_canvas.figure.subplots()    
-#     line1, = p1.plot(time, myoii_intden, color='blue', label='MyoII')
-    
-#     xcoords = [0, 0, 0, 0, 0, 0, 0, 0]
-#     for xc in xcoords:
-#         p1.axvline(x=xc)
-
-#     p1.set_xlabel('time_point')
-#     p1.set_ylabel('MyoII Int. Den. (A.U.)')
-    
-#     ax2 = p1.twinx()    
-#     line2, = ax2.plot(time, area, color='gray', linestyle='dashed', label='area')
-#     ax2.set_xlabel('time_point')
-#     ax2.set_ylabel('cell area (pixels)')    
-    
-#     p1.set_title('Cell #' + str(i) + ' MyoII & cell area')
-#     p1.legend(handles=[line1, line2])
-
     
 fig = plt.figure()
 ax1 = fig.add_subplot()
@@ -216,12 +194,12 @@ ax2.set_ylabel('cell area (pixels)')
 ax1.set_title('Cell #' + str(i) + ' MyoII & cell area')
 ax1.legend(handles=[line1, line2])
 
-p1_ti = ax1.twinx()
-p1_tf = ax1.twinx()
-p2_ti = ax1.twinx()
-p2_tf = ax1.twinx()
-p3_ti = ax1.twinx()
-p3_tf = ax1.twinx()
+p1_ti = ax1.twinx(); p1_ti.axis('off')
+p1_tf = ax1.twinx(); p1_tf.axis('off')
+p2_ti = ax1.twinx(); p2_ti.axis('off')
+p2_tf = ax1.twinx(); p2_tf.axis('off')
+p3_ti = ax1.twinx(); p3_ti.axis('off')
+p3_tf = ax1.twinx(); p3_tf.axis('off')
 
 @magicgui(
     pulse1_ti={'widget_type': 'Slider', 'min': np.min(time)-1, 'max': np.max(time)},
@@ -247,44 +225,67 @@ def plot_data(
     if pulse1_ti >= np.min(time): 
         p1_ti.clear()
         p1_ti.axvline(x=pulse1_ti)
-        p1_ti.text(pulse1_ti+0.25,0.77,'pulse1_ti',rotation=90)
+        p1_ti.text(pulse1_ti+0.25,0.77,'p1_ti',rotation=90)
         p1_ti.axis('off')
         pulse1_ti = plot_data.pulse1_ti.value
+    else:
+        p1_ti.clear()
+        p1_ti.axis('off')
     
     if pulse1_tf >= pulse1_ti: 
         p1_tf.clear()
         p1_tf.axvline(x=pulse1_tf)
-        p1_ti.text(pulse1_tf+0.25,0.77,'pulse1_tf',rotation=90)
+        p1_ti.text(pulse1_tf+0.25,0.77,'p1_tf',rotation=90)
         p1_tf.axis('off')
+        pulse1_tf = plot_data.pulse1_tf.value
+    else:
+        p1_tf.clear()
+        p1_tf.axis('off')
+            
     
     # pulse2 ------------------------------------------------------------------
 
-    if pulse2_ti >= np.min(time): 
+    if pulse2_ti >= np.min(time) and pulse2_ti >= pulse1_tf: 
         p2_ti.clear()
         p2_ti.axvline(x=pulse2_ti)
-        p2_ti.text(pulse2_ti+0.25,0.77,'pulse2_ti',rotation=90)
+        p2_ti.text(pulse2_ti+0.25,0.77,'p2_ti',rotation=90)
+        p2_ti.axis('off')
+        pulse2_ti = plot_data.pulse2_ti.value
+    else:
+        p2_ti.clear()
         p2_ti.axis('off')
     
     if pulse2_tf >= pulse2_ti: 
         p2_tf.clear()
         p2_tf.axvline(x=pulse2_tf)
-        p2_ti.text(pulse2_tf+0.25,0.77,'pulse2_tf',rotation=90)
+        p2_ti.text(pulse2_tf+0.25,0.77,'p2_tf',rotation=90)
+        p2_tf.axis('off')
+        pulse2_tf = plot_data.pulse2_tf.value
+    else:
+        p2_tf.clear()
         p2_tf.axis('off')
     
     # pulse3 ------------------------------------------------------------------
     
-    # if pulse3_ti > pulse3_tf:
-    #     pulse3_tf = pulse3_ti
-
-    # p3_ti.clear()
-    # p3_ti.axvline(x=pulse3_ti)
-    # p3_ti.text(pulse3_ti+0.25,0.77,'pulse3_ti',rotation=90)
-    # p3_ti.axis('off')
+    if pulse3_ti >= np.min(time) and pulse3_ti >= pulse2_tf: 
+        p3_ti.clear()
+        p3_ti.axvline(x=pulse3_ti)
+        p3_ti.text(pulse3_ti+0.25,0.77,'p3_ti',rotation=90)
+        p3_ti.axis('off')
+        pulse3_ti = plot_data.pulse3_ti.value
+    else:
+        p3_ti.clear()
+        p3_ti.axis('off')
     
-    # p3_tf.clear()
-    # p3_tf.axvline(x=pulse3_tf)
-    # p3_ti.text(pulse3_tf+0.25,0.77,'pulse3_tf',rotation=90)
-    # p3_tf.axis('off')
+    if pulse3_tf >= pulse3_ti: 
+        p3_tf.clear()
+        p3_tf.axvline(x=pulse3_tf)
+        p3_ti.text(pulse3_tf+0.25,0.77,'p3_tf',rotation=90)
+        p3_tf.axis('off')
+        pulse3_tf = plot_data.pulse3_tf.value
+    else:
+        p3_tf.clear()
+        p3_tf.axis('off')
     
     fig.figure.canvas.draw()
     
