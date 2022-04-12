@@ -204,6 +204,7 @@ end = time.time()
 print(f'  {(end - start):5.3f} s') 
 
 cellViewer.cell_data = cell_data[0]
+cellViewer.pulse_data = [None] * len(all_id)
 
 # -----------------------------------------------------------------------------     
 
@@ -252,6 +253,11 @@ from qtpy.QtWidgets import QSlider
         'max': np.max(cellViewer.cell_data['time'])
         }, 
     
+    cell_id = {
+        'widget_type': 'SpinBox',
+        'min': all_id[0], 
+        'max': all_id[-1]
+        }    
     )
 
 def plot_data(
@@ -278,6 +284,8 @@ def plot_data(
         ax2.relim()
         ax2.autoscale_view()
         
+        ax1.set_title('Cell #' + str(cell_id) + ' MyoII & cell area')
+        
     # -------------------------------------------------------------------------    
     
     if pulse1_ti >= np.min(cellViewer.cell_data['time']): 
@@ -299,14 +307,25 @@ def plot_data(
     else:
         p1_tf.clear()
         p1_tf.axis('off')
+        
+    if plot_data.pulse1_ti.value > np.min(cellViewer.cell_data['time'])-1:
+        
+        cellViewer.pulse_data[cell_id-1] = (plot_data.pulse1_ti.value, plot_data.pulse1_tf.value)
 
     cell_fig.canvas.draw()
+
+@plot_data.cell_id.changed.connect  
+def update_slider():
     
-
-wdg = plot_data.Gui()        
-def update_slider(cell_id):
-
-    wdg.pulse1_ti_widget.setMaximum(np.max(cellViewer.cell_data['time']))
+    
+    plot_data.pulse1_ti.min = np.min(cellViewer.cell_data['time'])-1
+    plot_data.pulse1_ti.max = np.max(cellViewer.cell_data['time'])
+    plot_data.pulse1_ti.value = np.min(cellViewer.cell_data['time'])-1
+    
+    plot_data.pulse1_tf.min = np.min(cellViewer.cell_data['time'])-1
+    plot_data.pulse1_tf.max = np.max(cellViewer.cell_data['time'])
+    plot_data.pulse1_tf.value = np.min(cellViewer.cell_data['time'])-1
+    
     
 #%%
 
@@ -321,4 +340,5 @@ viewer = cellViewer()
 #     )
 
 viewer.window.add_dock_widget(plot_data, area='bottom', name='widget') 
-wdg.cell_id_changed.connect(update_slider)
+
+test = cellViewer.pulse_data
