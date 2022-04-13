@@ -80,10 +80,10 @@ ax2.set_ylabel('Cell area (pixels)')
 ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
 ax1.legend(handles=[line1, line2])
 
+
+cstep = ax1.twinx(); cstep.axis('off')
 p1_ti = ax1.twinx(); p1_ti.axis('off')
 p1_tf = ax1.twinx(); p1_tf.axis('off')
-
-# -----------------------------------------------------------------------------  
 
 #%%
 
@@ -116,7 +116,13 @@ def plot_data(
         pulse1_ti: int,
         pulse1_tf: int,
         ):        
-                        
+                      
+    # ------------------------------------------------------------------------- 
+    
+    cellViewer.current_step = viewer.dims.current_step[0] + np.min(cellViewer.cell_data['timepoint'])
+    cstep.axvline(x=cellViewer.current_step) 
+    
+    
     # -------------------------------------------------------------------------    
     
     if pulse1_ti >= np.min(cellViewer.cell_data['timepoint']): 
@@ -142,7 +148,11 @@ def plot_data(
     cell_fig.canvas.draw()
     
     if plot_data.pulse1_ti.value > np.min(cellViewer.cell_data['timepoint'])-1:
-        cellViewer.pulse_data[cellViewer.cell_data['cell_id']-1] = (plot_data.pulse1_ti.value, plot_data.pulse1_tf.value)
+        cellViewer.pulse_data[cellViewer.cell_data['cell_id']-1] = (
+            plot_data.pulse1_ti.value, 
+            plot_data.pulse1_tf.value,
+            
+            )
 
 @plot_data.next_cell.changed.connect  
 def update_slider():
@@ -181,7 +191,8 @@ def update_slider():
     plot_data.pulse1_tf.min = np.min(cellViewer.cell_data['timepoint'])-1
     plot_data.pulse1_tf.max = np.max(cellViewer.cell_data['timepoint'])
     plot_data.pulse1_tf.value = np.min(cellViewer.cell_data['timepoint'])-1
-      
+
+# @plot_data.next_cell.changed.connect         
     
 #%%
 
