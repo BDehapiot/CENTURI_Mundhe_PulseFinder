@@ -68,7 +68,7 @@ def get_cell_data(
                     cell_info_path + '/' + file_name, skiprows=1)  
              
         # Get variables        
-        timepoint = temp_data_cell[:,12].astype('int')
+        time_range = temp_data_cell[:,12].astype('int')
         ctrd_x = temp_data_cell[:,2].astype('int')
         ctrd_y = temp_data_cell[:,3].astype('int')
         area = temp_data_cell[:,1]
@@ -76,9 +76,9 @@ def get_cell_data(
         myoii_intden = temp_data_myoii[:,7]
                 
         # Create cell_display 
-        cell_display = np.zeros([timepoint.shape[0], crop_y, crop_x]).astype('int')
+        cell_display = np.zeros([time_range.shape[0], crop_y, crop_x]).astype('int')
         
-        for t in range(timepoint.shape[0]):
+        for t in range(time_range.shape[0]):
         
             # Set crop limits
             y1 = ctrd_y[t] - crop_y//2
@@ -87,13 +87,13 @@ def get_cell_data(
             x2 = ctrd_x[t] + crop_x//2
             
             # Crop data 
-            myoii_crop = myoii[timepoint[t]-1,y1:y2,x1:x2] 
-            labels_crop = labels[timepoint[t]-1,y1:y2,x1:x2] == cell_id
+            myoii_crop = myoii[time_range[t]-1,y1:y2,x1:x2] 
+            labels_crop = labels[time_range[t]-1,y1:y2,x1:x2] == cell_id
             outline_crop = (pixconn(labels_crop, 2) < 8) * labels_crop
             
             # Draw text
             font = cv2.FONT_HERSHEY_DUPLEX
-            text = 'Cell #' + str(cell_id) + ' timepoint = ' + str(timepoint[t])
+            text = 'Cell #' + str(cell_id) + ' time_range = ' + str(time_range[t])
             text_crop = np.zeros(outline_crop.shape)    
             text_crop = cv2.putText(
                 text_crop, text, (10,25), font, 0.5, (1,1,1), 1, cv2.LINE_AA)   
@@ -104,7 +104,7 @@ def get_cell_data(
         # Append all_data list                        
         cell_data = {
             'cell_id' : cell_id,
-            'timepoint' : timepoint,
+            'time_range' : time_range,
             'area' : area,
             'ctrd_x' : ctrd_x,
             'ctrd_y' : ctrd_y,

@@ -61,20 +61,20 @@ cell_fig = plt.figure()
 
 ax1 = cell_fig.add_subplot()
 line1, = ax1.plot(
-    cell_data[0]['timepoint'], cell_data[0]['myoii_intden'], 
+    cell_data[0]['time_range'], cell_data[0]['myoii_intden'], 
     color='blue', label='MyoII'
     )
 
-ax1.set_xlabel('Timepoint')
+ax1.set_xlabel('Time point')
 ax1.set_ylabel('MyoII Int. Den. (A.U.)')
 
 ax2 = ax1.twinx()
 line2, = ax2.plot(
-    cell_data[0]['timepoint'], cell_data[0]['area'],
+    cell_data[0]['time_range'], cell_data[0]['area'],
     color='gray', linestyle='dashed', label='area'
     ) 
 
-ax2.set_xlabel('Timepoint')
+ax2.set_xlabel('Time point')
 ax2.set_ylabel('Cell area (pixels)')  
 
 ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
@@ -99,14 +99,14 @@ p1_tf = ax1.twinx(); p1_tf.axis('off')
     
     pulse1_ti = {
         'widget_type': 'Slider', 
-        'min': np.min(cellViewer.cell_data['timepoint'])-1, 
-        'max': np.max(cellViewer.cell_data['timepoint'])
+        'min': np.min(cellViewer.cell_data['time_range'])-1, 
+        'max': np.max(cellViewer.cell_data['time_range'])
         },
     
     pulse1_tf = {
         'widget_type': 'Slider', 
-        'min': np.min(cellViewer.cell_data['timepoint'])-1, 
-        'max': np.max(cellViewer.cell_data['timepoint'])
+        'min': np.min(cellViewer.cell_data['time_range'])-1, 
+        'max': np.max(cellViewer.cell_data['time_range'])
         }, 
 
     )
@@ -116,16 +116,15 @@ def plot_data(
         pulse1_ti: int,
         pulse1_tf: int,
         ):        
-                      
+              
     # ------------------------------------------------------------------------- 
-    
-    cellViewer.current_step = viewer.dims.current_step[0] + np.min(cellViewer.cell_data['timepoint'])
-    cstep.axvline(x=cellViewer.current_step) 
-    
+        
+    cell_id = cellViewer.cell_data['cell_id']
+    time_range = cellViewer.cell_data['time_range']
     
     # -------------------------------------------------------------------------    
     
-    if pulse1_ti >= np.min(cellViewer.cell_data['timepoint']): 
+    if pulse1_ti >= np.min(time_range): 
         p1_ti.clear()
         p1_ti.axvline(x=pulse1_ti)
         p1_ti.text(pulse1_ti+0.25,0.77,'p1_ti',rotation=90)
@@ -144,56 +143,63 @@ def plot_data(
     else:
         p1_tf.clear()
         p1_tf.axis('off')
-        
+      
+    # -------------------------------------------------------------------------    
+      
     cell_fig.canvas.draw()
     
-    if plot_data.pulse1_ti.value > np.min(cellViewer.cell_data['timepoint'])-1:
-        cellViewer.pulse_data[cellViewer.cell_data['cell_id']-1] = (
-            plot_data.pulse1_ti.value, 
-            plot_data.pulse1_tf.value,
-            
+    # -------------------------------------------------------------------------
+    
+    if pulse1_ti > np.min(time_range)-1:
+        cellViewer.pulse_data[cell_id-1] = (
+            pulse1_ti, pulse1_tf
             )
 
 @plot_data.next_cell.changed.connect  
 def update_slider():
+
     
-    cellViewer.cell_data = cell_data[cellViewer.cell_data['cell_id']] # 
+    cellViewer.cell_data = cell_data[cellViewer.cell_data['cell_id']] 
+    
+    # -------------------------------------------------------------------------
+    
+    cell_id = cellViewer.cell_data['cell_id']
+    time_range = cellViewer.cell_data['time_range']
+    display = cellViewer.cell_data['display']
     
     # -------------------------------------------------------------------------
     
     viewer.layers.pop(0)
     viewer.add_image(
-        cellViewer.cell_data['display'],
-        name='Cell #' + str(cellViewer.cell_data['cell_id']) + ' MyoII',
+        display,
+        name = 'Cell #' + str(cell_id) + ' MyoII',
         contrast_limits = [0, np.quantile(myoii, 0.999)]
         )
     
     # ------------------------------------------------------------------------- 
     
-    line1.set_xdata(cellViewer.cell_data['timepoint'])
+    line1.set_xdata(time_range)
     line1.set_ydata(cellViewer.cell_data['myoii_intden'])
     ax1.relim()
     ax1.autoscale_view()
     
-    line2.set_xdata(cellViewer.cell_data['timepoint'])
+    line2.set_xdata(time_range)
     line2.set_ydata(cellViewer.cell_data['area'])
     ax2.relim()
     ax2.autoscale_view()
     
-    ax1.set_title('Cell #' + str(cellViewer.cell_data['cell_id']) + ' MyoII & cell area')
+    ax1.set_title('Cell #' + str(cell_id) + ' MyoII & cell area')
 
     # ------------------------------------------------------------------------- 
 
-    plot_data.pulse1_ti.min = np.min(cellViewer.cell_data['timepoint'])-1
-    plot_data.pulse1_ti.max = np.max(cellViewer.cell_data['timepoint'])
-    plot_data.pulse1_ti.value = np.min(cellViewer.cell_data['timepoint'])-1
+    plot_data.pulse1_ti.min = np.min(cellViewer.cell_data['time_range'])-1
+    plot_data.pulse1_ti.max = np.max(cellViewer.cell_data['time_range'])
+    plot_data.pulse1_ti.value = np.min(cellViewer.cell_data['time_range'])-1
     
-    plot_data.pulse1_tf.min = np.min(cellViewer.cell_data['timepoint'])-1
-    plot_data.pulse1_tf.max = np.max(cellViewer.cell_data['timepoint'])
-    plot_data.pulse1_tf.value = np.min(cellViewer.cell_data['timepoint'])-1
+    plot_data.pulse1_tf.min = np.min(cellViewer.cell_data['time_range'])-1
+    plot_data.pulse1_tf.max = np.max(cellViewer.cell_data['time_range'])
+    plot_data.pulse1_tf.value = np.min(cellViewer.cell_data['time_range'])-1
 
-# @plot_data.next_cell.changed.connect         
-    
 #%%
 
 plot_data.native.layout().addWidget(FigureCanvas(cell_fig)) 
