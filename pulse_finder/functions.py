@@ -93,7 +93,7 @@ def get_cell_data(
             
             # Draw text
             font = cv2.FONT_HERSHEY_DUPLEX
-            text = 'Cell #' + str(cell_id) + ' time_range = ' + str(time_range[t])
+            text = 'Cell #' + str(cell_id) + ' time point = ' + str(time_range[t])
             text_crop = np.zeros(outline_crop.shape)    
             text_crop = cv2.putText(
                 text_crop, text, (10,25), font, 0.5, (1,1,1), 1, cv2.LINE_AA)   
