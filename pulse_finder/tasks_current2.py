@@ -80,10 +80,10 @@ ax2.set_ylabel('Cell area (pixels)')
 ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
 ax1.legend(handles=[line1, line2])
 
-
-cstep = ax1.twinx(); cstep.axis('off')
 p1_ti = ax1.twinx(); p1_ti.axis('off')
 p1_tf = ax1.twinx(); p1_tf.axis('off')
+p2_ti = ax1.twinx(); p2_ti.axis('off')
+p2_tf = ax1.twinx(); p2_tf.axis('off')
 
 #%%
 
@@ -109,12 +109,26 @@ p1_tf = ax1.twinx(); p1_tf.axis('off')
         'max': np.max(cellViewer.cell_data['time_range'])
         }, 
 
+    pulse2_ti = {
+        'widget_type': 'Slider', 
+        'min': np.min(cellViewer.cell_data['time_range'])-1, 
+        'max': np.max(cellViewer.cell_data['time_range'])
+        },
+    
+    pulse2_tf = {
+        'widget_type': 'Slider', 
+        'min': np.min(cellViewer.cell_data['time_range'])-1, 
+        'max': np.max(cellViewer.cell_data['time_range'])
+        }, 
+
     )
 
-def plot_data(
+def show_data(
         next_cell: bool,
         pulse1_ti: int,
         pulse1_tf: int,
+        pulse2_ti: int,
+        pulse2_tf: int,        
         ):        
               
     # ------------------------------------------------------------------------- 
@@ -127,9 +141,9 @@ def plot_data(
     if pulse1_ti >= np.min(time_range): 
         p1_ti.clear()
         p1_ti.axvline(x=pulse1_ti)
-        p1_ti.text(pulse1_ti+0.25,0.77,'p1_ti',rotation=90)
+        p1_ti.text(pulse1_ti+0.25,0.83,'p1_ti',rotation=90)
         p1_ti.axis('off')
-        pulse1_ti = plot_data.pulse1_ti.value
+        pulse1_ti = show_data.pulse1_ti.value
     else:
         p1_ti.clear()
         p1_ti.axis('off')
@@ -137,12 +151,32 @@ def plot_data(
     if pulse1_tf >= pulse1_ti: 
         p1_tf.clear()
         p1_tf.axvline(x=pulse1_tf)
-        p1_ti.text(pulse1_tf+0.25,0.77,'p1_tf',rotation=90)
+        p1_ti.text(pulse1_tf+0.25,0.83,'p1_tf',rotation=90)
         p1_tf.axis('off')
-        pulse1_tf = plot_data.pulse1_tf.value
+        pulse1_tf = show_data.pulse1_tf.value
     else:
         p1_tf.clear()
         p1_tf.axis('off')
+        
+    if pulse2_ti >= pulse1_tf: 
+        p2_ti.clear()
+        p2_ti.axvline(x=pulse2_ti)
+        p2_ti.text(pulse2_ti+0.25,0.83,'p2_ti',rotation=90)
+        p2_ti.axis('off')
+        pulse2_ti = show_data.pulse2_ti.value
+    else:
+        p2_ti.clear()
+        p2_ti.axis('off')
+    
+    if pulse2_tf >= pulse1_tf and pulse2_tf >= pulse2_ti: 
+        p2_tf.clear()
+        p2_tf.axvline(x=pulse2_tf)
+        p2_ti.text(pulse2_tf+0.25,0.83,'p2_tf',rotation=90)
+        p2_tf.axis('off')
+        pulse2_tf = show_data.pulse2_tf.value
+    else:
+        p2_tf.clear()
+        p2_tf.axis('off')    
       
     # -------------------------------------------------------------------------    
       
@@ -150,12 +184,20 @@ def plot_data(
     
     # -------------------------------------------------------------------------
     
-    if pulse1_ti > np.min(time_range)-1:
-        cellViewer.pulse_data[cell_id-1] = (
-            pulse1_ti, pulse1_tf
-            )
+    if pulse1_ti == np.min(time_range)-1:
+        pulse1_ti = np.nan
+        pulse1_tf = np.nan
+    
+    if pulse2_ti < pulse1_tf:
+        pulse2_ti = np.nan
+        pulse2_tf = np.nan
+        
+    cellViewer.pulse_data[cell_id-1] = (
+        pulse1_ti, pulse1_tf, 
+        pulse2_ti, pulse2_tf
+        )    
 
-@plot_data.next_cell.changed.connect  
+@show_data.next_cell.changed.connect  
 def update_slider():
 
     
@@ -192,26 +234,35 @@ def update_slider():
 
     # ------------------------------------------------------------------------- 
 
-    plot_data.pulse1_ti.min = np.min(cellViewer.cell_data['time_range'])-1
-    plot_data.pulse1_ti.max = np.max(cellViewer.cell_data['time_range'])
-    plot_data.pulse1_ti.value = np.min(cellViewer.cell_data['time_range'])-1
+    show_data.pulse1_ti.min = np.min(time_range)-1
+    show_data.pulse1_ti.max = np.max(time_range)
+    show_data.pulse1_ti.value = np.min(time_range)-1
     
-    plot_data.pulse1_tf.min = np.min(cellViewer.cell_data['time_range'])-1
-    plot_data.pulse1_tf.max = np.max(cellViewer.cell_data['time_range'])
-    plot_data.pulse1_tf.value = np.min(cellViewer.cell_data['time_range'])-1
+    show_data.pulse1_tf.min = np.min(time_range)-1
+    show_data.pulse1_tf.max = np.max(time_range)
+    show_data.pulse1_tf.value = np.min(time_range)-1
+    
+    show_data.pulse2_ti.min = np.min(time_range)-1
+    show_data.pulse2_ti.max = np.max(time_range)
+    show_data.pulse2_ti.value = np.min(time_range)-1
+    
+    show_data.pulse2_tf.min = np.min(time_range)-1
+    show_data.pulse2_tf.max = np.max(time_range)
+    show_data.pulse2_tf.value = np.min(time_range)-1
 
 #%%
 
-plot_data.native.layout().addWidget(FigureCanvas(cell_fig)) 
-
 viewer = cellViewer()
-
+show_data.native.layout().addWidget(FigureCanvas(cell_fig)) 
+viewer.window.add_dock_widget(show_data, area='bottom', name='widget') 
 viewer.add_image(
-    cellViewer.cell_data['display'],
-    name='Cell #' + str(cellViewer.cell_data['cell_id']) + ' MyoII',
+    cell_data[0]['display'],
+    name='Cell #' + str(1) + ' MyoII',
     contrast_limits = [0, np.quantile(myoii, 0.999)]
     )
 
-viewer.window.add_dock_widget(plot_data, area='bottom', name='widget') 
+
+#%%
 
 test = cellViewer.pulse_data
+
