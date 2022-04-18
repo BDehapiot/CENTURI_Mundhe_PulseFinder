@@ -42,3 +42,5 @@ pulse_data = show_data_widget(
 #%% Save pulse data
 
 np.savetxt(pulse_data_path, pulse_data, fmt='%i', delimiter=',')
+
+# test
