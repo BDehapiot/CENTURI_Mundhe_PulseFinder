@@ -13,4 +13,3 @@ dependencies:
     - matplotlib-base
     - joblib
     - napari
-    - cookiecutter

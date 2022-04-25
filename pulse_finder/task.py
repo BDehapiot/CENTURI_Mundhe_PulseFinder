@@ -9,7 +9,7 @@ from widget import show_data_widget
 #%% Inputs
 
 DATA_PATH = '../data/'
-FOLD_NAME = 'ecadgfp_sqhmch_290820_e3_controlforhkbfog'
+FOLD_NAME = 'ecadgfp_sqhmch_200820_e4_controlforhkbfog'
 CROP_Y = 250; CROP_X = 400
 
 #%% Initialize
@@ -36,11 +36,5 @@ cell_data = get_cell_data(
 #%% Show data widget
 
 pulse_data = show_data_widget(
-    cell_data, all_id, myoii
+    cell_data, all_id, myoii, pulse_data_path
     )  
-
-#%% Save pulse data
-
-np.savetxt(pulse_data_path, pulse_data, fmt='%i', delimiter=',')
-
-# test
