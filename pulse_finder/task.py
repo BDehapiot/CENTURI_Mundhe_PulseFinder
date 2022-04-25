@@ -15,10 +15,10 @@ CROP_Y = 250; CROP_X = 400
 #%% Initialize
 
 # Create paths
-myoii_path = DATA_PATH + '/' + FOLD_NAME + '/' + FOLD_NAME + '_MyoII_MAX.tif'
-labels_path = DATA_PATH + '/' + FOLD_NAME + '/' + FOLD_NAME + '_cell_tracks.tif'
-pulse_data_path = DATA_PATH + '/' + FOLD_NAME + '/pulse_data.csv'
-cell_info_path = DATA_PATH + '/' + FOLD_NAME + '/cell_info'
+myoii_path = f'{DATA_PATH}/{FOLD_NAME}/{FOLD_NAME}_MyoII_MAX.tif'
+labels_path = f'{DATA_PATH}/{FOLD_NAME}/{FOLD_NAME}_cell_tracks.tif'
+pulse_data_path = f'{DATA_PATH}/{FOLD_NAME}/pulse_data.csv'
+cell_info_path = f'{DATA_PATH}/{FOLD_NAME}/cell_info'
 
 # Open data
 myoii = io.imread(myoii_path) 
