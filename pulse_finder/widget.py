@@ -45,6 +45,8 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     p1_tf = ax1.twinx(); p1_tf.axis('off')
     p2_ti = ax1.twinx(); p2_ti.axis('off')
     p2_tf = ax1.twinx(); p2_tf.axis('off')
+    p3_ti = ax1.twinx(); p3_ti.axis('off')
+    p3_tf = ax1.twinx(); p3_tf.axis('off')
 
     # -------------------------------------------------------------------------
     
@@ -90,15 +92,29 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
             'min': np.min(cellViewer.cell_data['time_range'])-1, 
             'value': np.min(cellViewer.cell_data['time_range'])-1,
             'max': np.max(cellViewer.cell_data['time_range'])
-            }
-    
+            },
+        
+        pulse3_ti = {
+            'widget_type': 'Slider', 
+            'min': np.min(cellViewer.cell_data['time_range'])-1, 
+            'value': np.min(cellViewer.cell_data['time_range'])-1,
+            'max': np.max(cellViewer.cell_data['time_range'])
+            },
+        
+        pulse3_tf = {
+            'widget_type': 'Slider', 
+            'min': np.min(cellViewer.cell_data['time_range'])-1, 
+            'value': np.min(cellViewer.cell_data['time_range'])-1,
+            'max': np.max(cellViewer.cell_data['time_range'])
+            }    
         )
     
     def show_data(
             next_cell: bool,
             exit_cell: bool,
             pulse1_ti: int, pulse1_tf: int,
-            pulse2_ti: int, pulse2_tf: int
+            pulse2_ti: int, pulse2_tf: int,
+            pulse3_ti: int, pulse3_tf: int
             ):        
                   
         # Extract variables    
@@ -107,6 +123,8 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         pulse1_tf = show_data.pulse1_tf.value  
         pulse2_ti = show_data.pulse2_ti.value
         pulse2_tf = show_data.pulse2_tf.value 
+        pulse3_ti = show_data.pulse3_ti.value
+        pulse3_tf = show_data.pulse3_tf.value 
             
         # --- pulse1 ---
         if pulse1_ti >= np.min(time_range): 
@@ -124,7 +142,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
             p1_tf.axis('off')           
         else:
             p1_tf.clear(); p1_tf.axis('off')
-              
+
         # --- pulse2 ---   
         if pulse2_ti >= pulse1_tf: 
             p2_ti.clear()
@@ -143,6 +161,25 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
             p2_tf.axis('off')            
         else:
             p2_tf.clear(); p2_tf.axis('off')  
+              
+        # --- pulse3 ---   
+        if pulse3_ti >= pulse2_tf: 
+            p3_ti.clear()
+            p3_ti.axvline(x=pulse3_ti)
+            p3_ti.text(pulse3_ti+0.25,0.8,'p3_ti',rotation=90)
+            p3_ti.axis('off')            
+        else:
+            p3_ti.clear(); p3_ti.axis('off')
+                     
+        if (pulse3_ti >= pulse2_tf) and (
+            pulse3_tf >= pulse2_tf) and (
+            pulse3_tf >= pulse3_ti):                 
+            p3_tf.clear()
+            p3_tf.axvline(x=pulse3_tf)
+            p3_ti.text(pulse3_tf+0.25,0.8,'p3_tf',rotation=90)
+            p3_tf.axis('off')            
+        else:
+            p3_tf.clear(); p3_tf.axis('off')  
                    
         # Draw graph  
         cell_fig.canvas.draw_idle()
@@ -158,7 +195,9 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         pulse1_ti = show_data.pulse1_ti.value
         pulse1_tf = show_data.pulse1_tf.value  
         pulse2_ti = show_data.pulse2_ti.value
-        pulse2_tf = show_data.pulse2_tf.value 
+        pulse2_tf = show_data.pulse2_tf.value
+        pulse3_ti = show_data.pulse3_ti.value
+        pulse3_tf = show_data.pulse3_tf.value
         
         # Append pulse_data       
         if (pulse1_ti > np.min(time_range)-1) and (
@@ -171,6 +210,12 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
             pulse2_tf > pulse2_ti):
             cellViewer.pulse_data[2,cell_id-1] = pulse2_ti
             cellViewer.pulse_data[3,cell_id-1] = pulse2_tf  
+            
+        if (pulse3_ti > np.min(time_range)-1) and (
+            pulse3_ti >= pulse2_tf) and (
+            pulse3_tf > pulse3_ti):
+            cellViewer.pulse_data[4,cell_id-1] = pulse3_ti
+            cellViewer.pulse_data[5,cell_id-1] = pulse3_tf  
     
         # Update cell data
         cellViewer.cell_data = cell_data[cellViewer.cell_data['cell_id']] 
@@ -206,7 +251,11 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         
         show_data.pulse2_ti.min = show_data.pulse2_ti.value = np.min(time_range)-1
         show_data.pulse2_tf.min = show_data.pulse2_tf.value = np.min(time_range)-1
-        show_data.pulse2_ti.max = show_data.pulse2_tf.max = np.max(time_range)    
+        show_data.pulse2_ti.max = show_data.pulse2_tf.max = np.max(time_range) 
+        
+        show_data.pulse3_ti.min = show_data.pulse3_ti.value = np.min(time_range)-1
+        show_data.pulse3_tf.min = show_data.pulse3_tf.value = np.min(time_range)-1
+        show_data.pulse3_ti.max = show_data.pulse3_tf.max = np.max(time_range) 
 
     # -------------------------------------------------------------------------    
     
