@@ -270,7 +270,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     # Set up the viewer
     viewer = cellViewer()
     show_data.native.layout().addWidget(FigureCanvas(cell_fig)) 
-    viewer.window.add_dock_widget(show_data, area='top', name='widget') 
+    viewer.window.add_dock_widget(show_data, area='right', name='widget') 
     viewer.add_image(
         cell_data[0]['display'],
         name='Cell #' + str(1) + ' MyoII',
