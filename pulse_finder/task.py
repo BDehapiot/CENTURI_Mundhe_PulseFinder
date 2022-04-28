@@ -4,7 +4,6 @@ import numpy as np
 from skimage import io
 
 from functions import get_cell_data
-from widget import show_data_widget
 
 #%% Inputs
 
@@ -34,6 +33,8 @@ cell_data = get_cell_data(
     ) 
 
 #%% Show data widget
+
+from widget_new import show_data_widget
 
 pulse_data = show_data_widget(
     cell_data, all_id, myoii, pulse_data_path
