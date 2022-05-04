@@ -18,7 +18,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     cellViewer.pulse_data = np.zeros((6, len(all_id)), dtype=int)
     
     # Plot cell fig
-    cell_fig = plt.figure(dpi=150) # Graph resolution
+    cell_fig = plt.figure(dpi=100) # Graph resolution
     
     # ---
     
@@ -52,52 +52,126 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
     ax1.legend(handles=[line1, line2])
 
-    # -------------------------------------------------------------------------
+#%%
     
     @magicgui(
         
         auto_call = True,
-        
+               
         current_frame = {
-            'widget_type': 'PushButton',
-            'value': False, 
-            'label': 'next cell'
-            }
+            'widget_type': 'Slider', 
+            'label': 'current frame',
+            'readout': False,
+            'min': 0, 
+            'value': len(cellViewer.cell_data['time_range'])//2,
+            'max': len(cellViewer.cell_data['time_range'])-1
+            },
         
         next_cell = {
             'widget_type': 'PushButton',
+            'label': 'next cell',
             'value': False, 
-            'label': 'next cell'
+
             },
         
         exit_cell = {
             'widget_type': 'PushButton',
+            'label': 'exit and save',
             'value': False, 
-            'label': 'exit and save'
-            }    
+
+            },
+        
+        pulse1 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°1', 
+            'value': 'ti;tf'
+            },
+        
+        pulse2 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°2', 
+            'value': 'ti;tf'
+            },
+        
+        pulse3 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°3', 
+            'value': 'ti;tf'
+            },
+        
+        pulse4 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°4', 
+            'value': 'ti;tf'
+            },
+        
+        pulse5 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°5', 
+            'value': 'ti;tf'
+            },
+        
+        pulse6 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°6', 
+            'value': 'ti;tf'
+            },
+        
+        pulse7 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°7', 
+            'value': 'ti;tf'
+            },
+        
+        pulse8 = {
+            'widget_type': 'LineEdit', 
+            'label': 'pulse n°8', 
+            'value': 'ti;tf'
+            },
         
         )
+#%%
     
     def show_data(
+            current_frame: int,
             next_cell: bool,
-            exit_cell: bool
+            exit_cell: bool,
+            pulse1: str,
+            pulse2: str,
+            pulse3: str,
+            pulse4: str,
+            pulse5: str,
+            pulse6: str,
+            pulse7: str,
+            pulse8: str,
             ):    
         
-        # 
-        current_frame = viewer.dims.current_step[0]
-        ax3.axvline(x=current_frame)
-                                    
+        # Extract t0
+        t0 = np.min(cellViewer.cell_data['time_range'])
+        
+        # Draw current_frame vertical line
+        ax3.clear()
+        ax3.axvline(x=current_frame + t0)
+        ax3.text(current_frame + t0 + 0.5, 0.95, f'{current_frame + t0}')
+        ax3.axis('off') 
+        
         # Draw graph  
         cell_fig.canvas.draw_idle()
 
 #%%                
+
+    @show_data.current_frame.changed.connect 
+    def update_current_frame():
+
+        viewer.dims.set_point(0, show_data.current_frame.value)
+        
+
+    # -------------------------------------------------------------------------
     
     @show_data.next_cell.changed.connect  
     def update_show_data():
                 
         # Extract variables      
-            
-        # ---------------------------------------------------------------------
         
         # Update cell data
         cellViewer.cell_data = cell_data[cellViewer.cell_data['cell_id']] 
@@ -125,15 +199,10 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         ax2.autoscale_view()
         
         ax1.set_title('Cell #' + str(cell_id) + ' MyoII & cell area')
-
-    # -------------------------------------------------------------------------    
-    
-    # def update_slider(event):
-    #     # only trigger if update comes from first axis (optional)
-    #     print('inside')
-    #         #ind_lambda = viewer.dims.indices[0]
-    #     time = cellViewer.dims.current_step[0]
-    #     cellViewer.text_overlay.text = f"{time:1.1f} time" 
+        
+        # Update current frame slider
+        show_data.current_frame.value = len(cellViewer.cell_data['time_range'])//2
+        show_data.current_frame.max = len(cellViewer.cell_data['time_range'])-1
         
     # -------------------------------------------------------------------------     
     
@@ -142,7 +211,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         
         np.savetxt(pulse_data_path, cellViewer.pulse_data, fmt='%i', delimiter=',')
         cellViewer.close(viewer)
-        
+
     # -------------------------------------------------------------------------
     
     # Set up the viewer
