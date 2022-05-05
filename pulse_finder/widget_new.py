@@ -130,6 +130,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
             },
         
         )
+    
 #%%
     
     def show_data(
@@ -157,14 +158,13 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         
         # Draw graph  
         cell_fig.canvas.draw_idle()
-
+        
 #%%                
 
     @show_data.current_frame.changed.connect 
     def update_current_frame():
 
         viewer.dims.set_point(0, show_data.current_frame.value)
-        
 
     # -------------------------------------------------------------------------
     
@@ -212,7 +212,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         np.savetxt(pulse_data_path, cellViewer.pulse_data, fmt='%i', delimiter=',')
         cellViewer.close(viewer)
 
-    # -------------------------------------------------------------------------
+#%%
     
     # Set up the viewer
     viewer = cellViewer()
@@ -223,5 +223,15 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         name='Cell #' + str(1) + ' MyoII',
         contrast_limits = [0, np.quantile(myoii, 0.999)]
         )
+
+    # -------------------------------------------------------------------------   
+    
+    @viewer.bind_key('p')
+    def print_names(viewer):
+        show_data.pulse1.value = 'test'
+        print(show_data.current_frame.value)
     
     return cellViewer.pulse_data
+
+
+    
