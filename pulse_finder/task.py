@@ -34,8 +34,8 @@ cell_data = get_cell_data(
 
 #%% Show data widget
 
-from widget_new import show_data_widget
+from widget_new import display_cell_data
 
-pulse_data = show_data_widget(
+pulse_data = display_cell_data(
     cell_data, all_id, myoii, pulse_data_path
     )  

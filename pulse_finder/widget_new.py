@@ -3,19 +3,26 @@
 import napari
 import numpy as np
 from magicgui import magicgui
+from scipy import signal
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 
-#%% 
+#%%
 
-def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
+def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
 
     # Define cellViewer class
     class cellViewer(napari.Viewer):
         pass
-    
+
     cellViewer.cell_data = cell_data[0]
+    cellViewer.pulse_idx = 0
     cellViewer.pulse_data = np.zeros((6, len(all_id)), dtype=int)
+    
+    # Filter myoii_intden signal
+    myoii_intden = cell_data[0]['myoii_intden']
+    sos = signal.butter(2, 0.3, 'low', output='sos') # lowpass IIR
+    myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden)
     
     # Plot cell fig
     cell_fig = plt.figure(dpi=100) # Graph resolution
@@ -25,7 +32,12 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     ax1 = cell_fig.add_subplot()
     line1, = ax1.plot(
         cell_data[0]['time_range'], cell_data[0]['myoii_intden'], 
-        color='black', label='MyoII'
+        color=('#2378BE'), linewidth=2, zorder=2, label='MyoII'
+        )
+    
+    line1_filt, = ax1.plot(
+        cell_data[0]['time_range'], myoii_intden_filt,
+        color='black', linestyle='dotted', zorder=3, label='MyoII filt'
         )
     
     ax1.set_xlabel('Time point')
@@ -36,23 +48,27 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     ax2 = ax1.twinx()
     line2, = ax2.plot(
         cell_data[0]['time_range'], cell_data[0]['area'],
-        color='gray', linestyle='dashed', label='area'
+        color='0.75', zorder=1, label='area'
         ) 
     
     ax2.set_xlabel('Time point')
     ax2.set_ylabel('Cell area (pixels)')  
     
     # ---
-    
+
     ax3 = ax1.twinx(); 
     ax3.axis('off')
     
     # ---
     
     ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
-    ax1.legend(handles=[line1, line2])
+    ax1.legend(handles=[line1, line1_filt, line2])
+    
+    # ---
+    
+    cell_fig.tight_layout()
 
-#%%
+#%% 
     
     @magicgui(
         
@@ -133,7 +149,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     
 #%%
     
-    def show_data(
+    def display(
             current_frame: int,
             next_cell: bool,
             exit_cell: bool,
@@ -152,7 +168,7 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         
         # Draw current_frame vertical line
         ax3.clear()
-        ax3.axvline(x=current_frame + t0)
+        ax3.axvline(x=current_frame + t0, color='black', linewidth=1)
         ax3.text(current_frame + t0 + 0.5, 0.95, f'{current_frame + t0}')
         ax3.axis('off') 
         
@@ -161,15 +177,15 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         
 #%%                
 
-    @show_data.current_frame.changed.connect 
-    def update_current_frame():
+    @display.current_frame.changed.connect 
+    def callback_current_frame():
 
-        viewer.dims.set_point(0, show_data.current_frame.value)
+        viewer.dims.set_point(0, display.current_frame.value)
 
     # -------------------------------------------------------------------------
     
-    @show_data.next_cell.changed.connect  
-    def update_show_data():
+    @display.next_cell.changed.connect  
+    def callback_next_cell():
                 
         # Extract variables      
         
@@ -201,13 +217,13 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
         ax1.set_title('Cell #' + str(cell_id) + ' MyoII & cell area')
         
         # Update current frame slider
-        show_data.current_frame.value = len(cellViewer.cell_data['time_range'])//2
-        show_data.current_frame.max = len(cellViewer.cell_data['time_range'])-1
+        display.current_frame.value = len(cellViewer.cell_data['time_range'])//2
+        display.current_frame.max = len(cellViewer.cell_data['time_range'])-1
         
     # -------------------------------------------------------------------------     
     
-    @show_data.exit_cell.changed.connect  
-    def exit_show_data():
+    @display.exit_cell.changed.connect  
+    def callback_exit_cell():
         
         np.savetxt(pulse_data_path, cellViewer.pulse_data, fmt='%i', delimiter=',')
         cellViewer.close(viewer)
@@ -216,8 +232,8 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
     
     # Set up the viewer
     viewer = cellViewer()
-    show_data.native.layout().addWidget(FigureCanvas(cell_fig)) 
-    viewer.window.add_dock_widget(show_data, area='right', name='widget') 
+    display.native.layout().addWidget(FigureCanvas(cell_fig)) 
+    viewer.window.add_dock_widget(display, area='right', name='widget') 
     viewer.add_image(
         cell_data[0]['display'],
         name='Cell #' + str(1) + ' MyoII',
@@ -226,10 +242,46 @@ def show_data_widget(cell_data, all_id, myoii, pulse_data_path):
 
     # -------------------------------------------------------------------------   
     
-    @viewer.bind_key('p')
-    def print_names(viewer):
-        show_data.pulse1.value = 'test'
-        print(show_data.current_frame.value)
+    @viewer.bind_key('Enter')
+    def add_pulse_info(viewer):
+        
+        # Extract variables
+        t0 = np.min(cellViewer.cell_data['time_range'])
+        pulse_idx = cellViewer.pulse_idx + 1      
+        pulse_number = np.ceil(pulse_idx/2)
+        current_frame = display.current_frame.value + t0
+        
+        if (pulse_idx % 2) != 0:
+            pulse_t = 'ti'
+        else:
+            pulse_t = 'tf'
+            
+        # Update variables   
+        cellViewer.pulse_idx = pulse_idx
+        display.pulse1.value = display.pulse1.value.replace(pulse_t, str(current_frame)) 
+        # setattr(display, 'pulse', 1).value = display.pulse1.value.replace(pulse_t, str(current_frame)) 
+        print(f'idx={pulse_idx} pulse n°{int(pulse_number)} {pulse_t}={current_frame}') 
+        
+    @viewer.bind_key('Backspace')
+    def remove_pulse_info(viewer):
+        
+        if cellViewer.pulse_idx > 1:
+        
+            # Extract variables
+            t0 = np.min(cellViewer.cell_data['time_range'])
+            pulse_idx = cellViewer.pulse_idx - 1      
+            pulse_number = np.ceil(pulse_idx/2)
+            current_frame = display.current_frame.value + t0
+                
+            if (pulse_idx % 2) != 0:
+                pulse_t = 'ti'
+            else:
+                pulse_t = 'tf'    
+                
+            # Update variables   
+            cellViewer.pulse_idx = pulse_idx
+                
+            print(f'idx={pulse_idx} pulse n°{int(pulse_number)} {pulse_t}={current_frame}') 
     
     return cellViewer.pulse_data
 
