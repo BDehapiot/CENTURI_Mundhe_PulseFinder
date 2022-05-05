@@ -18,6 +18,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     CellViewer.cell_data = cell_data[0]
     CellViewer.pulse_idx = 0
     CellViewer.pulse_data = np.zeros((6, len(all_id)), dtype=int)
+    CellViewer.pulse_string = []
     
     # Filter myoii_intden signal
     myoii_intden = cell_data[0]['myoii_intden']
@@ -97,53 +98,10 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
 
             },
         
-        pulse1 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°1', 
-            'value': 'ti;tf'
-            },
-        
-        pulse2 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°2', 
-            'value': 'ti;tf'
-            },
-        
-        pulse3 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°3', 
-            'value': 'ti;tf'
-            },
-        
-        pulse4 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°4', 
-            'value': 'ti;tf'
-            },
-        
-        pulse5 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°5', 
-            'value': 'ti;tf'
-            },
-        
-        pulse6 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°6', 
-            'value': 'ti;tf'
-            },
-        
-        pulse7 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°7', 
-            'value': 'ti;tf'
-            },
-        
-        pulse8 = {
-            'widget_type': 'LineEdit', 
-            'label': 'pulse n°8', 
-            'value': 'ti;tf'
-            },
+        pulse_info = {
+            'widget_type': 'TextEdit', 
+            'label': 'pulse info'
+            }
         
         )
     
@@ -153,14 +111,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             current_frame: int,
             next_cell: bool,
             exit_cell: bool,
-            pulse1: str,
-            pulse2: str,
-            pulse3: str,
-            pulse4: str,
-            pulse5: str,
-            pulse6: str,
-            pulse7: str,
-            pulse8: str,
+            pulse_info: str
             ):    
         
         # Extract t0
@@ -255,13 +206,24 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             pulse_t = 'ti'
         else:
             pulse_t = 'tf'
-            
+             
+        pulse_string = f'({pulse_idx:02}) pulse n°{int(pulse_number)}: {pulse_t}={current_frame}'
+
         # Update variables   
         CellViewer.pulse_idx = pulse_idx
-        current_pulse = getattr(display, f'pulse{int(pulse_number)}')
-        current_pulse.value = current_pulse.value.replace(pulse_t, str(current_frame))
+        
+        if pulse_idx == 1:
+            display.pulse_info.value = pulse_string
+        else:
+            if pulse_t == 'tf':
+                display.pulse_info.value +=  ' ' + pulse_string 
+            else:
+                display.pulse_info.value += '\n' + pulse_string 
+        
+        CellViewer.pulse_string.append(pulse_string)
+                
 
-        print(f'idx={pulse_idx} pulse n°{int(pulse_number)} {pulse_t}={current_frame}') 
+        print(f'idx={pulse_idx} pulse n°{int(pulse_number)}: {pulse_t}={current_frame}') 
         
     @viewer.bind_key('Backspace')
     def remove_pulse_info(viewer):
@@ -271,18 +233,22 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             # Extract variables
             t0 = np.min(CellViewer.cell_data['time_range'])
             pulse_idx = CellViewer.pulse_idx - 1      
-            pulse_number = np.ceil(pulse_idx/2)
+            pulse_number = np.ceil(pulse_idx/2)            
             current_frame = display.current_frame.value + t0
                 
             if (pulse_idx % 2) != 0:
                 pulse_t = 'ti'
             else:
-                pulse_t = 'tf'    
+                pulse_t = 'tf'  
                 
+            pulse_string = CellViewer.pulse_string[pulse_idx]   
+
             # Update variables   
             CellViewer.pulse_idx = pulse_idx
-                
-            print(f'idx={pulse_idx} pulse n°{int(pulse_number)} {pulse_t}={current_frame}') 
+            
+            display.pulse_info.value.replace(pulse_string, '')
+            
+            print(pulse_string) 
     
     return CellViewer.pulse_data
 
