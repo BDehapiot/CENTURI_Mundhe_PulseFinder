@@ -176,7 +176,8 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     @display.exit_cell.changed.connect  
     def callback_exit_cell():
         
-        np.savetxt(pulse_data_path, CellViewer.pulse_data, fmt='%i', delimiter=',')
+        
+        # np.savetxt(pulse_data_path, CellViewer.pulse_data, fmt='%i', delimiter=',')
         CellViewer.close(viewer)
 
 #%%
@@ -207,50 +208,38 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         else:
             pulse_t = 'tf'
              
-        pulse_string = f'({pulse_idx:02}) pulse n°{int(pulse_number)}: {pulse_t}={current_frame}'
+        pulse_string = f'({pulse_idx:02}) pulse n°{int(pulse_number):02}: {pulse_t}={current_frame:03}'
+        
+        # display.pulse_info.value = '\n'.join(string for string in CellViewer.pulse_string) 
+        
+        # print("\n".join(f"pulse {2*i+1} : tf \t pulse {2*i+2} : tf" for i in range(8)))
+        print('print' + pulse_string) 
 
         # Update variables   
         CellViewer.pulse_idx = pulse_idx
-        
-        if pulse_idx == 1:
-            display.pulse_info.value = pulse_string
-        else:
-            if pulse_t == 'tf':
-                display.pulse_info.value +=  ' ' + pulse_string 
-            else:
-                display.pulse_info.value += '\n' + pulse_string 
-        
         CellViewer.pulse_string.append(pulse_string)
-                
-
-        print(f'idx={pulse_idx} pulse n°{int(pulse_number)}: {pulse_t}={current_frame}') 
         
+        # if pulse_idx == 1:
+        #     display.pulse_info.value = pulse_string
+        # else:
+        #     if pulse_t == 'tf':
+        #         display.pulse_info.value +=  ' ' + pulse_string 
+        #     else:
+        #         display.pulse_info.value += '\n' + pulse_string 
+
     @viewer.bind_key('Backspace')
     def remove_pulse_info(viewer):
         
-        if CellViewer.pulse_idx > 1:
+        if CellViewer.pulse_idx > 0:
         
             # Extract variables
-            t0 = np.min(CellViewer.cell_data['time_range'])
-            pulse_idx = CellViewer.pulse_idx - 1      
-            pulse_number = np.ceil(pulse_idx/2)            
-            current_frame = display.current_frame.value + t0
-                
-            if (pulse_idx % 2) != 0:
-                pulse_t = 'ti'
-            else:
-                pulse_t = 'tf'  
-                
-            pulse_string = CellViewer.pulse_string[pulse_idx]   
+            print('erase' + CellViewer.pulse_string[-1]) 
 
             # Update variables   
-            CellViewer.pulse_idx = pulse_idx
-            
-            display.pulse_info.value.replace(pulse_string, '')
-            
-            print(pulse_string) 
-    
-    return CellViewer.pulse_data
+            CellViewer.pulse_idx -= 1
+            CellViewer.pulse_string.pop()
+
+    return CellViewer.pulse_data, CellViewer.pulse_string, display.pulse_info.value
 
 
     
