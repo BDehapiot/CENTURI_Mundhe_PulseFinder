@@ -21,43 +21,43 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     CellViewer.pulse_string = []
     CellViewer.pulse_data = [None]*len(cell_data)    
 
-#%% Initialize graph
-    
-    graph = plt.figure(dpi=100) # Graph resolution
-    
-    # ax1 cell area
-    
-    ax1 = graph.add_subplot()
-    line1, = ax1.plot(
-        cell_data[0]['time_range'], cell_data[0]['area'],
-        color='0.75', label='area'
-        ) 
-    
-    ax1.set_xlabel('Time point')
-    ax1.set_ylabel('Cell area (pixels)')  
-    
-    # ax2 myoii intden
-    
+    # Filter myoii_intden signal
     myoii_intden = cell_data[0]['myoii_intden']
     sos = signal.butter(2, 0.3, 'low', output='sos') # lowpass IIR
     myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden)
+
+#%% Initialize Graph
+    
+    cell_fig = plt.figure(dpi=100) # Graph resolution
+    
+    # ax1 cell area
+    
+    ax1 = cell_fig.add_subplot()
+    line1, = ax1.plot(
+        cell_data[0]['time_range'], cell_data[0]['myoii_intden'], 
+        color=('#2378BE'), linewidth=2, zorder=5, label='MyoII'
+        )
+    
+    line1_filt, = ax1.plot(
+        cell_data[0]['time_range'], myoii_intden_filt,
+        color='black', linestyle='dotted', zorder=10, label='MyoII filt'
+        )
+    
+    ax1.set_xlabel('Time point')
+    ax1.set_ylabel('MyoII Int. Den. (A.U.)')
+    
+    # ---
     
     ax2 = ax1.twinx()
-    
     line2, = ax2.plot(
-        cell_data[0]['time_range'], myoii_intden, 
-        color=('#2378BE'), linewidth=2, label='MyoII'
-        )
-    
-    line2_filt, = ax2.plot(
-        cell_data[0]['time_range'], myoii_intden_filt,
-        color='black', linestyle='dotted', label='MyoII filt'
-        )
+        cell_data[0]['time_range'], cell_data[0]['area'],
+        color='0.75', zorder=0, label='area'
+        ) 
     
     ax2.set_xlabel('Time point')
-    ax2.set_ylabel('MyoII Int. Den. (A.U.)')
+    ax2.set_ylabel('Cell area (pixels)')  
     
-    # ax3 current frame
+    # ---
     
     t0 = np.min(cell_data[0]['time_range'])
     current_frame = len(cell_data[0]['time_range'])//2
@@ -68,12 +68,14 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     ax3.text(current_frame + t0 + 0.5, 0.95, f'{current_frame + t0}')
     ax3.axis('off') 
     
-    # title, legend and layout
+    # ---
     
     ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
-    ax1.legend(handles=[line1, line2, line2_filt])
-    graph.tight_layout()  
+    ax1.legend(handles=[line1, line1_filt, line2])
     
+    # ---
+    
+    cell_fig.tight_layout()
 
 #%% 
     
@@ -140,7 +142,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         ax3.axis('off') 
         
         # Draw graph  
-        graph.canvas.draw_idle()
+        cell_fig.canvas.draw_idle()
         
 #%%                
 
@@ -148,6 +150,8 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     def callback_current_frame():
 
         viewer.dims.set_point(0, display.current_frame.value)
+
+    # -------------------------------------------------------------------------
     
     @display.critical_freq.changed.connect 
     def callback_critical_freq():
@@ -159,15 +163,17 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         # Update graph
         sos = signal.butter(2, display.critical_freq.value, 'low', output='sos') # lowpass IIR
         myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden)        
-        line2_filt.set_xdata(time_range)
-        line2_filt.set_ydata(myoii_intden_filt)
-        ax2.relim()
-        ax2.autoscale_view()        
-        
+        line1_filt.set_xdata(time_range)
+        line1_filt.set_ydata(myoii_intden_filt)
+        ax1.relim()
+        ax1.autoscale_view()        
+    
+    # -------------------------------------------------------------------------    
+    
     @display.next_cell.changed.connect  
     def callback_next_cell():  
         
-        # Update cell_data
+        # Update cell data
         CellViewer.cell_data = cell_data[CellViewer.cell_data['cell_id']] 
         
         # Extract variables   
@@ -185,31 +191,28 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             )
         
         # Update graph
-        
-        # ax1 cell area
-        
         line1.set_xdata(time_range)
-        line1.set_ydata(CellViewer.cell_data['area'])
+        line1.set_ydata(myoii_intden)
+        ax1.relim()
+        ax1.autoscale_view()
+
+        # ---
+
+        sos = signal.butter(2, display.critical_freq.value, 'low', output='sos') # lowpass IIR
+        myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden)        
+        line1_filt.set_xdata(time_range)
+        line1_filt.set_ydata(myoii_intden_filt)
         ax1.relim()
         ax1.autoscale_view()
         
-        # ax2 myoii intden
-        
-        myoii_intden = CellViewer.cell_data['myoii_intden']
-        sos = signal.butter(2, display.critical_freq.value, 'low', output='sos') # lowpass IIR
-        myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden) 
+        # ---
         
         line2.set_xdata(time_range)
-        line2.set_ydata(myoii_intden)
-        ax2.relim()
-        ax2.autoscale_view()
-
-        line2_filt.set_xdata(time_range)
-        line2_filt.set_ydata(myoii_intden_filt)
+        line2.set_ydata(CellViewer.cell_data['area'])
         ax2.relim()
         ax2.autoscale_view()
         
-        # title
+        # ---
         
         ax1.set_title('Cell #' + str(cell_id) + ' MyoII & cell area')
         
@@ -220,6 +223,8 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         
         CellViewer.pulse_idx = 0
         CellViewer.pulse_string = []
+        
+    # -------------------------------------------------------------------------     
     
     @display.exit_cell.changed.connect  
     def callback_exit_cell():
@@ -231,7 +236,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     
     # Set up the viewer
     viewer = CellViewer()
-    display.native.layout().addWidget(FigureCanvas(graph)) 
+    display.native.layout().addWidget(FigureCanvas(cell_fig)) 
     viewer.window.add_dock_widget(display, area='right', name='widget') 
     viewer.add_image(
         cell_data[0]['cell_crop'],
@@ -239,7 +244,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         contrast_limits = [0, np.quantile(myoii, 0.999)]
         )
 
-#%% 
+    # -------------------------------------------------------------------------   
     
     @viewer.bind_key('Enter')
     def add_pulse_info(viewer):

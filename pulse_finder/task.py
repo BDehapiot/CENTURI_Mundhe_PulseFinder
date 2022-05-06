@@ -36,46 +36,6 @@ cell_data = get_cell_data(
 
 from widget_new import display_cell_data
 
-pulse_data, pulse_string, test = display_cell_data(
+pulse_data = display_cell_data(
     cell_data, all_id, myoii, pulse_data_path
     )  
-
-#%%
-
-# print('\n'.join(string for string in pulse_string))
-
-test = len(pulse_string)
-
-for i, string in enumerate(pulse_string):
-
-    if (i % 2) == 0:
-        line_string = string
-    else:
-        line_string += ' ' + string
-        
-    if i < 2:
-        full_string = line_string
-    else:    
-        full_string = (full_string + '\n' + line_string)
-        
-    
-    # if ((i % 2) == 0) and (i < len(pulse_string)):
-    #     pass
-    # else:
-    #     full_string = (full_string + '\n' + line_string)    
-
-    # if (i % 2) == 0:
-    #     line_string = string
-    # else:
-    #     line_string += ' ' + string
-        
-    # if i < 2:
-    #     full_string = line_string
-    # else:
-    #     full_string = (full_string + '\n' + line_string) 
-    
-print(full_string)
-
-        
-        
-        

@@ -76,7 +76,7 @@ def get_cell_data(
         myoii_intden = temp_data_myoii[:,7]
                 
         # Create cell_display 
-        cell_display = np.zeros([time_range.shape[0], crop_y, crop_x]).astype('int')
+        cell_crop = np.zeros([time_range.shape[0], crop_y, crop_x]).astype('int')
         
         for t in range(time_range.shape[0]):
         
@@ -99,7 +99,7 @@ def get_cell_data(
                 text_crop, text, (10,25), font, 0.5, (1,1,1), 1, cv2.LINE_AA)   
             
             # Append cell_display
-            cell_display[t,0:myoii_crop.shape[0],0:myoii_crop.shape[1]] = myoii_crop + (outline_crop + text_crop)*255
+            cell_crop[t,0:myoii_crop.shape[0],0:myoii_crop.shape[1]] = myoii_crop + (outline_crop + text_crop)*255
                 
         # Append all_data list                        
         cell_data = {
@@ -110,7 +110,7 @@ def get_cell_data(
             'ctrd_y' : ctrd_y,
             'myoii_mean' : myoii_mean,
             'myoii_intden' : myoii_intden,
-            'display' : cell_display
+            'cell_crop' : cell_crop
             }  
                     
         return cell_data
