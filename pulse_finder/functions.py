@@ -14,7 +14,8 @@ from tools.conn import pixconn
 #%%
 
 def get_cell_data(
-        myoii, labels, cell_info_path, all_id, crop_y, crop_x, parallel=True):
+        myoii, labels, cell_info_path, all_id, crop_y, crop_x, parallel=True
+        ):
     
     ''' General description.
     
@@ -67,7 +68,8 @@ def get_cell_data(
                 temp_data_myoii = np.loadtxt(
                     cell_info_path + '/' + file_name, skiprows=1)  
              
-        # Get variables        
+        # Get variables  
+        emb_id = cell_info_path.split("/")[-2]
         time_range = temp_data_cell[:,12].astype('int')
         ctrd_x = temp_data_cell[:,2].astype('int')
         ctrd_y = temp_data_cell[:,3].astype('int')
@@ -103,6 +105,7 @@ def get_cell_data(
                 
         # Append all_data list                        
         cell_data = {
+            'emb_id' : emb_id,
             'cell_id' : cell_id,
             'time_range' : time_range,
             'area' : area,

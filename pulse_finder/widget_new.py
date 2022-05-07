@@ -2,8 +2,8 @@
 
 import napari
 import numpy as np
-from magicgui import magicgui
 from scipy import signal
+from magicgui import magicgui
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 
@@ -18,15 +18,15 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     # Initialize CellViewer attributes
     CellViewer.cell_data = cell_data[0]
     CellViewer.pulse_idx = 0
+    CellViewer.pulse_data = [None]*len(cell_data) 
     CellViewer.pulse_string = []
-    CellViewer.pulse_data = [None]*len(cell_data)    
+
 
 #%% Initialize graph
     
     graph = plt.figure(dpi=100) # Graph resolution
     
-    # ax1 cell area
-    
+    # ax1 cell area    
     ax1 = graph.add_subplot()
     line1, = ax1.plot(
         cell_data[0]['time_range'], cell_data[0]['area'],
@@ -36,8 +36,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     ax1.set_xlabel('Time point')
     ax1.set_ylabel('Cell area (pixels)')  
     
-    # ax2 myoii intden
-    
+    # ax2 myoii intden    
     myoii_intden = cell_data[0]['myoii_intden']
     sos = signal.butter(2, 0.3, 'low', output='sos') # lowpass IIR
     myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden)
@@ -57,8 +56,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     ax2.set_xlabel('Time point')
     ax2.set_ylabel('MyoII Int. Den. (A.U.)')
     
-    # ax3 current frame
-    
+    # ax3 current frame    
     t0 = np.min(cell_data[0]['time_range'])
     current_frame = len(cell_data[0]['time_range'])//2
     
@@ -68,14 +66,13 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     ax3.text(current_frame + t0 + 0.5, 0.95, f'{current_frame + t0}')
     ax3.axis('off') 
     
-    # title, legend and layout
-    
+    # title, legend and layout    
     ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
     ax1.legend(handles=[line1, line2, line2_filt])
     graph.tight_layout()  
     
 
-#%% 
+#%% Initialize widgets
     
     @magicgui(
         
@@ -93,8 +90,8 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         critical_freq = {
             'widget_type': 'FloatSpinBox',    
             'label': 'lowpass freq.',
-            'value': 0.3,
-            'min': 0.05, 
+            'value': 0.3, 
+            'min': 0.05,
             'max': 0.95,
             'step': 0.05
             },
@@ -103,14 +100,12 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             'widget_type': 'PushButton',
             'label': 'next cell',
             'value': False, 
-
             },
         
         exit_cell = {
             'widget_type': 'PushButton',
             'label': 'exit and save',
             'value': False, 
-
             },
         
         pulse_info = {
@@ -120,7 +115,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         
         )
     
-#%%
+#%% Display
     
     def display(
             current_frame: int,
@@ -142,7 +137,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         # Draw graph  
         graph.canvas.draw_idle()
         
-#%%                
+#%% Callbacks           
 
     @display.current_frame.changed.connect 
     def callback_current_frame():
@@ -227,9 +222,8 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         # np.savetxt(pulse_data_path, CellViewer.pulse_data, fmt='%i', delimiter=',')
         CellViewer.close(viewer)
 
-#%%
-    
-    # Set up the viewer
+#%% Set up viewer
+
     viewer = CellViewer()
     display.native.layout().addWidget(FigureCanvas(graph)) 
     viewer.window.add_dock_widget(display, area='right', name='widget') 
@@ -239,7 +233,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         contrast_limits = [0, np.quantile(myoii, 0.999)]
         )
 
-#%% 
+#%% Set up shortcuts
     
     @viewer.bind_key('Enter')
     def add_pulse_info(viewer):
@@ -252,9 +246,9 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         current_frame = display.current_frame.value + t0
         
         if (pulse_idx % 2) != 0:
-            pulse_string = f'({pulse_idx:02}) pulse n°{int(pulse_number):02}: ti={current_frame:03}'
+            pulse_string = f'pulse #{int(pulse_number):02}: ti={current_frame:03}'
         else:
-            pulse_string = f'({pulse_idx:02}) tf={current_frame:03}'
+            pulse_string = f' ; tf={current_frame:03}'
 
         print('print' + pulse_string) 
 
@@ -281,7 +275,9 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
                     full_string = (full_string + '\n' + line_string)   
 
         display.pulse_info.value = full_string
-        CellViewer.pulse_data[cell_id-1] = display.pulse_info.value
+        
+        #
+        CellViewer.pulse_data[cell_id-1] = display.pulse_info.value ###
 
     @viewer.bind_key('Backspace')
     def remove_pulse_info(viewer):
@@ -322,8 +318,9 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             else: 
                 
                 display.pulse_info.value = ''
-                
-            CellViewer.pulse_data[cell_id-1] = display.pulse_info.value
+            
+            #
+            CellViewer.pulse_data[cell_id-1] = display.pulse_info.value ###
 
     return CellViewer.pulse_data
 
