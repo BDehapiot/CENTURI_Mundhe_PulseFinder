@@ -152,3 +152,4 @@ def get_cell_data(
         print(f'  {(end - start):5.3f} s')
         
     return cell_data
+

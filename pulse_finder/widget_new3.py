@@ -18,9 +18,10 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     # Initialize CellViewer attributes
     CellViewer.cell_data = cell_data[0]
     CellViewer.pulse_idx = 0
-    CellViewer.pulse_time = []
     CellViewer.pulse_string = []
     CellViewer.pulse_data = [] #[None]*len(cell_data) 
+    
+
 
 #%% Initialize graph
     
@@ -66,14 +67,9 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     ax3.text(current_frame + t0 + 0.5, 0.95, f'{current_frame + t0}')
     ax3.axis('off') 
     
-    # ax4 pulse ti&tf
-    ax4 = ax1.twinx(); 
-    ax4.clear()
-    ax4.axis('off')
-    
     # title, legend and layout    
     ax1.set_title('Cell #' + str(1) + ' MyoII & cell area')
-    # ax1.legend(handles=[line1, line2, line2_filt])
+    ax1.legend(handles=[line1, line2, line2_filt])
     graph.tight_layout()  
     
 
@@ -209,17 +205,17 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         # title
         ax1.set_title('Cell #' + str(cell_id) + ' MyoII & cell area')
   
-        # # Extract pulse_data
-        # split_string = display.pulse_info.value.split('\n')
-        # for line_string in split_string:
-        #     if len(line_string) == 25:
-        #         cell_id = cell_id-1
-        #         pulse_number = int(line_string[7:9])
-        #         pulse_ti = int(line_string[14:17])
-        #         pulse_tf = int(line_string[22:25])               
-        #         CellViewer.pulse_data.append((
-        #             cell_id, pulse_number, pulse_ti, pulse_tf
-        #             ))
+        # Extract pulse_data
+        full_string = display.pulse_info.value.split('\n')
+        for line_string in full_string:
+            if len(line_string) == 25:
+                cell_id = cell_id-1
+                pulse_number = int(line_string[7:9])
+                pulse_ti = int(line_string[14:17])
+                pulse_tf = int(line_string[22:25])               
+                CellViewer.pulse_data.append((
+                    cell_id, pulse_number, pulse_ti, pulse_tf
+                    ))
         
         # Update variables
         display.current_frame.value = len(CellViewer.cell_data['time_range'])//2
@@ -266,12 +262,9 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
 
         # Update variables   
         CellViewer.pulse_idx = pulse_idx
-        CellViewer.pulse_time.append(current_frame) 
-        CellViewer.pulse_string.append(pulse_string) 
-        
-        print(CellViewer.pulse_time)
+        CellViewer.pulse_string.append(pulse_string)        
 
-        # Get full_string
+        # Print string
         for i, string in enumerate(CellViewer.pulse_string):
 
             if (i % 2) == 0:
@@ -292,21 +285,6 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         display.pulse_info.value = full_string
         
         #
-        ax4.clear()
-        ax4.vlines(
-            x=CellViewer.pulse_time, ymin=0, ymax=1,
-            color='gray', linestyle='dashed', linewidth=1)
-        ax4.set_ylim([0, 1])
-        ax4.axis('off')       
-        
-        
-        #
-        from matplotlib.patches import Rectangle
-        if len(CellViewer.pulse_time) % 2 == 0:
-            print('draw')
-            ax4.add_patch(Rectangle((0, CellViewer.pulse_time[-2]), 2, 6), facecolor='black')
-        
-                
         # CellViewer.pulse_data[cell_id-1] = display.pulse_info.value ###
 
     @viewer.bind_key('Backspace')
@@ -323,7 +301,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             CellViewer.pulse_idx -= 1
             CellViewer.pulse_string.pop()
             
-            # Get full_string
+            # Print string
             if CellViewer.pulse_string:
                 
                 for i, string in enumerate(CellViewer.pulse_string):
