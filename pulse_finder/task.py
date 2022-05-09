@@ -39,8 +39,3 @@ from widget_new import display_cell_data
 pulse_data = display_cell_data(
     cell_data, all_id, myoii, pulse_data_path
     )  
-
-#%%
-
-
-

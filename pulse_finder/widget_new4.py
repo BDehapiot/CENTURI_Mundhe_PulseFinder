@@ -110,24 +110,24 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
             'max': len(CellViewer.cell_data['time_range'])-1,
             },
         
-        critical_freq_area = {
-            'widget_type': 'Slider',    
-            'label': 'lowpass freq. area',
-            'value': 10, 
-            'min': 1,
-            'max': 99,
-            'step': 1,
-            },
-        
         critical_freq_myoii = {
-            'widget_type': 'Slider',    
+            'widget_type': 'FloatSpinBox',    
             'label': 'lowpass freq. myoii',
-            'value': 30, 
-            'min': 1,
-            'max': 99,
-            'step': 1,
+            'value': 0.3, 
+            'min': 0.1,
+            'max': 0.9,
+            'step': 0.1,
             },
         
+        critical_freq_area = {
+            'widget_type': 'FloatSpinBox',    
+            'label': 'lowpass freq. area',
+            'value': 0.1, 
+            'min': 0.1,
+            'max': 0.9,
+            'step': 0.1,
+            },
+
         next_cell = {
             'widget_type': 'PushButton',
             'label': 'next cell',
@@ -176,7 +176,24 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     def callback_current_frame():
 
         viewer.dims.set_point(0, display.current_frame.value)
+    
+    @display.critical_freq_myoii.changed.connect 
+    def callback_critical_freq_myoii():
 
+        # Extract variables  
+        myoii_intden = CellViewer.cell_data['myoii_intden']
+        time_range = CellViewer.cell_data['time_range']        
+        
+        # Update graph
+        sos = signal.butter(2, display.critical_freq_myoii.value, 'low', output='sos') # lowpass IIR
+        print("{0:.1f}".format(display.critical_freq_myoii.value))
+        myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden)        
+        line2_filt.set_xdata(time_range)
+        line2_filt.set_ydata(myoii_intden_filt)
+        ax2.relim()
+        ax2.autoscale_view()  
+        CellViewer.cell_data['myoii_intden_filt'] = myoii_intden
+        
     @display.critical_freq_area.changed.connect 
     def callback_critical_freq_area():
 
@@ -187,7 +204,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         # Update graph
         
         # ax1 cell area  
-        sos = signal.butter(2, display.critical_freq_area.value/100, 'low', output='sos') # lowpass IIR
+        sos = signal.butter(2, display.critical_freq_area.value, 'low', output='sos') # lowpass IIR
         area_filt = signal.sosfiltfilt(sos, area)        
         line1_filt.set_xdata(time_range)
         line1_filt.set_ydata(area_filt)
@@ -198,22 +215,6 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         ax4.clear()
         ax4.axvline(x=np.argmax(area_filt) + t0, color='black', linewidth=1)
         ax4.axis('off')
-        
-    @display.critical_freq_myoii.changed.connect 
-    def callback_critical_freq_myoii():
-
-        # Extract variables  
-        myoii_intden = CellViewer.cell_data['myoii_intden']
-        time_range = CellViewer.cell_data['time_range']        
-        
-        # Update graph
-        sos = signal.butter(2, display.critical_freq_myoii.value/100, 'low', output='sos') # lowpass IIR
-        myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden)        
-        line2_filt.set_xdata(time_range)
-        line2_filt.set_ydata(myoii_intden_filt)
-        ax2.relim()
-        ax2.autoscale_view()  
-        CellViewer.cell_data['myoii_intden_filt'] = myoii_intden
         
     @display.next_cell.changed.connect  
     def callback_next_cell():
@@ -280,7 +281,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         
         # ax1 cell area    
         area = CellViewer.cell_data['area']
-        sos = signal.butter(2, display.critical_freq_area.value/100, 'low', output='sos') # lowpass IIR
+        sos = signal.butter(2, display.critical_freq_area.value, 'low', output='sos') # lowpass IIR
         area_filt = signal.sosfiltfilt(sos, area)
         CellViewer.cell_data['area_filt'] = area_filt  
         
@@ -296,7 +297,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         
         # ax2 myoii intden
         myoii_intden = CellViewer.cell_data['myoii_intden']
-        sos = signal.butter(2, display.critical_freq_myoii.value/100, 'low', output='sos') # lowpass IIR
+        sos = signal.butter(2, display.critical_freq_myoii.value, 'low', output='sos') # lowpass IIR
         myoii_intden_filt = signal.sosfiltfilt(sos, myoii_intden) 
         CellViewer.cell_data['myoii_intden_filt'] = myoii_intden_filt
         
@@ -503,8 +504,5 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
                 #             )
                 
             graph.canvas.draw() 
-            
-    @viewer.bind_key('Backspace')
-    def remove_pulse_info(viewer):
             
     return CellViewer.pulse_data   
