@@ -291,21 +291,27 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
 
         display.pulse_info.value = full_string
         
-        #
+        # Add vertical lines
         ax4.clear()
         ax4.vlines(
             x=CellViewer.pulse_time, ymin=0, ymax=1,
             color='gray', linestyle='dashed', linewidth=1)
         ax4.set_ylim([0, 1])
         ax4.axis('off')       
-        
-        
-        #
+
+        # Add rectangles
         from matplotlib.patches import Rectangle
-        if len(CellViewer.pulse_time) % 2 == 0:
-            print('draw')
-            ax4.add_patch(Rectangle((0, CellViewer.pulse_time[-2]), 2, 6), facecolor='black')
         
+        if CellViewer.pulse_time:
+            
+            for i in range(len(CellViewer.pulse_time)):
+
+                if (i % 2) == 0:
+                    ti = CellViewer.pulse_time[i-1]
+                    tf = CellViewer.pulse_time[i]
+                    ax4.add_patch(Rectangle((ti, 0), tf-ti, 1, facecolor='black', alpha=0.05))
+                else:
+                    pass
                 
         # CellViewer.pulse_data[cell_id-1] = display.pulse_info.value ###
 
