@@ -14,7 +14,7 @@ from tools.conn import pixconn
 #%%
 
 def get_cell_data(
-        myoii, labels, cell_info_path, all_id, crop_y, crop_x, parallel=True
+        myoii, labels, emb_path, all_id, crop_y, crop_x, parallel=True
         ):
     
     ''' General description.
@@ -27,7 +27,7 @@ def get_cell_data(
     labels : np.ndarray
         Description.
         
-    cell_info_path : str
+    emb_path : str
         Description.
         
     all_id : np.ndarray
@@ -54,6 +54,10 @@ def get_cell_data(
     
     def _get_cell_data(cell_id):
         
+        # Get path
+        furrow_path = f'{emb_path}/distance_from_furrow.txt'
+        cell_info_path = f'{emb_path}/cell_info'
+                
         cell_info_list = os.listdir(cell_info_path)
                 
         for file_name in cell_info_list:
@@ -68,15 +72,20 @@ def get_cell_data(
                 temp_data_myoii = np.loadtxt(
                     cell_info_path + '/' + file_name, skiprows=1)  
              
-        # Get variables  
+        # Get variables          
         emb_id = cell_info_path.split("/")[-2]
         time_range = temp_data_cell[:,12].astype('int')
+        t0 = np.min(time_range) - 1
+        tend = np.max(time_range)
+        furrow_x = np.loadtxt(furrow_path, skiprows=1)[t0:tend,2].astype(int)
         ctrd_x = temp_data_cell[:,2].astype('int')
         ctrd_y = temp_data_cell[:,3].astype('int')
         area = temp_data_cell[:,1]
+        myoii_x = temp_data_cell[:,5].astype('int')
+        myoii_y = temp_data_cell[:,6].astype('int')
         myoii_mean = temp_data_myoii[:,1]
         myoii_intden = temp_data_myoii[:,7]
-                
+
         # Create cell_display 
         cell_crop = np.zeros([time_range.shape[0], crop_y, crop_x]).astype('int')
         
@@ -106,6 +115,7 @@ def get_cell_data(
         # Append all_data list                        
         cell_data = {
             'emb_id' : emb_id,
+            'furrow_x' : furrow_x,
             'cell_id' : cell_id,
             'time_range' : time_range,
             'area' : area,
@@ -113,6 +123,8 @@ def get_cell_data(
             'ctrd_y' : ctrd_y,
             'myoii_mean' : myoii_mean,
             'myoii_intden' : myoii_intden,
+            'myoii_x' : myoii_x,
+            'myoii_y' : myoii_y,
             'cell_crop' : cell_crop
             }  
                     
