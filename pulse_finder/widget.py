@@ -244,13 +244,14 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         for i in range(len(CellViewer.pulse_time)):
             if (i % 2) != 0:
                 
+                cell_duration = len(CellViewer.cell_data['time_range'])
                 area = CellViewer.cell_data['area']
-                tmax_area_real = CellViewer.max_area
+                cell_tmax_area_real = CellViewer.max_area
                 myoii_intden_filt = CellViewer.cell_data['myoii_intden_filt'] 
                 furrow_x = CellViewer.cell_data['furrow_x'] 
                 ctrd_x = CellViewer.cell_data['ctrd_x']
                 myoii_x = CellViewer.cell_data['myoii_x'] 
-                # tmax_area = tmax_area_real - t0
+                # cell_tmax_area = cell_tmax_area_real - t0
                 ti_real = CellViewer.pulse_time[i-1]
                 tf_real = CellViewer.pulse_time[i]
                 ti = ti_real - t0
@@ -258,7 +259,7 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
                 
                 tmax_real = np.argmax(myoii_intden_filt[ti:tf]) + ti_real
                 tmax = tmax_real - t0
-                if tmax_real <= tmax_area_real:
+                if tmax_real <= cell_tmax_area_real:
                     valid = 1
                 else:
                     valid = 0
@@ -285,8 +286,9 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
                     myoii_x - furrow_x)[tmax] 
 
                 temp_pulse_data.append({
-                    'pulse_crop':myoii_intden_filt[ti:tf],
-                    'tmax_area': tmax_area_real,
+                    'cell_duration': cell_duration, 
+                    'cell_tmax_area': cell_tmax_area_real,
+                    'pulse_crop': myoii_intden_filt[ti:tf],                    
                     'ti': ti_real,
                     'tf': tf_real,
                     'tmax': tmax_real,
@@ -314,8 +316,8 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
         CellViewer.pulse_idx = 0
         CellViewer.pulse_time = []
         CellViewer.pulse_string = []
+        display.current_frame.max = len(CellViewer.cell_data['time_range'])-1 
         display.current_frame.value = len(CellViewer.cell_data['time_range'])//2
-        display.current_frame.max = len(CellViewer.cell_data['time_range'])-1   
         display.pulse_info.value = ''     
         
         # Extract variables   
@@ -386,10 +388,83 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
     @display.exit_cell.changed.connect  
     def callback_exit_cell():
         
+        # Extract variables
+        t0 = CellViewer.t0
+        
+        # Extract pulse data
+        temp_pulse_data = []
+        for i in range(len(CellViewer.pulse_time)):
+            if (i % 2) != 0:
+                
+                cell_duration = len(CellViewer.cell_data['time_range'])
+                area = CellViewer.cell_data['area']
+                cell_tmax_area_real = CellViewer.max_area
+                myoii_intden_filt = CellViewer.cell_data['myoii_intden_filt'] 
+                furrow_x = CellViewer.cell_data['furrow_x'] 
+                ctrd_x = CellViewer.cell_data['ctrd_x']
+                myoii_x = CellViewer.cell_data['myoii_x'] 
+                # cell_tmax_area = cell_tmax_area_real - t0
+                ti_real = CellViewer.pulse_time[i-1]
+                tf_real = CellViewer.pulse_time[i]
+                ti = ti_real - t0
+                tf = tf_real - t0   
+                
+                tmax_real = np.argmax(myoii_intden_filt[ti:tf]) + ti_real
+                tmax = tmax_real - t0
+                if tmax_real <= cell_tmax_area_real:
+                    valid = 1
+                else:
+                    valid = 0
+                    
+                ti_int =  myoii_intden_filt[ti]   
+                tf_int =  myoii_intden_filt[tf]  
+                tmax_int =  myoii_intden_filt[tmax] 
+                on_rate = (tmax_int - ti_int) / (tmax - ti)
+                off_rate = (tf_int - tmax_int) / (tf - tmax)
+                
+                prominence = tmax_int - myoii_intden_filt[ti]               
+                duration = tf - ti                
+                promdur_ratio = prominence / duration
+                
+                halfprom = (prominence/2) + ti_int
+                temp = myoii_intden_filt[ti:tf].copy()
+                temp[temp < halfprom] = 0
+                temp[temp >= halfprom] = 1
+                halfprom_width = np.sum(temp)
+                
+                ctrd_furrow_dist = (
+                    ctrd_x - furrow_x)[tmax] 
+                myoii_furrow_dist = (
+                    myoii_x - furrow_x)[tmax] 
+
+                temp_pulse_data.append({
+                    'cell_duration': cell_duration, 
+                    'cell_tmax_area': cell_tmax_area_real,
+                    'pulse_crop': myoii_intden_filt[ti:tf],                    
+                    'ti': ti_real,
+                    'tf': tf_real,
+                    'tmax': tmax_real,
+                    'ti_int': ti_int,
+                    'tf_int': tf_int,
+                    'tmax_int': tmax_int,
+                    'on_rate': on_rate,
+                    'off_rate': off_rate,
+                    'valid': valid, 
+                    'prominence': prominence,
+                    'duration': duration,
+                    'promdur_ratio': promdur_ratio,
+                    'halfprom_width': halfprom_width,
+                    'ctrd_furrow_dist': ctrd_furrow_dist,
+                    'myoii_furrow_dist': myoii_furrow_dist,       
+                    }) 
+            
+        CellViewer.pulse_data.append(temp_pulse_data)
+        
         headers = np.array([
             'cell_id',
+            'cell_duration',
+            'cell_tmax_area',
             'pulse_id', 
-            'tmax_area',
             'valid',           
             'ti',
             'tf',
@@ -415,8 +490,9 @@ def display_cell_data(cell_data, all_id, myoii, pulse_data_path):
                 
                 temp_data = np.array([
                     cell_id,
+                    pulse['cell_duration'],
+                    pulse['cell_tmax_area'],
                     pulse_id,
-                    pulse['tmax_area'],
                     pulse['valid'],         
                     pulse['ti'],
                     pulse['tf'],
