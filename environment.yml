@@ -1,4 +1,4 @@
-name: pulse-finder
+name: pulse-select
 
 channels:
     - conda-forge
