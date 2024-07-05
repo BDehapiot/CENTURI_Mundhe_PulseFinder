@@ -1,16 +1,25 @@
-name: pulse-select
+name: PulseSelect
 
 channels:
-    - conda-forge
-    
+  - conda-forge
+
 dependencies:
-    - python=3.9
-    - pyqt=5.12.3
-    - pip
-    - numpy
-    - scipy
-    - scikit-image
-    - opencv
-    - matplotlib-base
-    - joblib
-    - napari
+  # conda_core
+  - python=3.10
+  - numpy=1.24*
+  - numba
+  - scipy
+  - pandas
+  - scikit-image
+  - opencv
+  - scikit-learn
+  - joblib
+  - matplotlib-base
+  - pip
+  # conda_spec
+  - napari
+  - pyqt
+  - spyder
+  - pip:
+    # pip_core
+    # pip_spec

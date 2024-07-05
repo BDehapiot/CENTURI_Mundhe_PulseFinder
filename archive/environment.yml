@@ -1,0 +1,16 @@
+name: pulse-select
+
+channels:
+    - conda-forge
+    
+dependencies:
+    - python=3.9
+    - pyqt=5.12.3
+    - pip
+    - numpy
+    - scipy
+    - scikit-image
+    - opencv
+    - matplotlib-base
+    - joblib
+    - napari
